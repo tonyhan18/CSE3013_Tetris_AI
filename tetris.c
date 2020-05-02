@@ -319,6 +319,7 @@ void BlockDown(int sig) {
 			gameOver = 1;
 			return;
 		}
+
 		score += AddBlockToField(field, nextBlock[0], blockRotate, blockY, blockX);
 		score += DeleteLine(field);
 		nextBlock[0] = nextBlock[1];
@@ -339,8 +340,6 @@ void BlockDown(int sig) {
 	timed_out = 0;
 }
 
-
-
 int AddBlockToField(char f[HEIGHT][WIDTH], int currentBlock, int blockRotate, int blockY, int blockX) {
 	// user code
 
@@ -349,8 +348,10 @@ int AddBlockToField(char f[HEIGHT][WIDTH], int currentBlock, int blockRotate, in
 	//Block이 추가된 영역의 필드값을 바꾼다.
 	for (int i = 0; i < 4; ++i) {
 		for (int j = 0; j < 4; ++j) {
-			if (block[currentBlock][blockRotate][i][j] == 1) f[i + blockY][j + blockX] = 1;
-			if (blockY == HEIGHT) touched++;
+			if (block[currentBlock][blockRotate][i][j] == 1) {
+				f[i + blockY][j + blockX] = 1;
+				if ((blockY + i+1) == HEIGHT) touched++;
+			}
 		}
 	}
 	return touched*10;
