@@ -139,7 +139,7 @@ void DrawField() {
 
 
 void PrintScore(int score) {
-	move(11, WIDTH + 11);
+	move(22, WIDTH + 11);
 	printw("%8d", score);
 }
 
@@ -158,7 +158,7 @@ void DrawNextBlock(int* nextBlock) {
 	}
 
 	for (i = 0; i < 4; i++) {
-		move(12 + i, WIDTH + 13);
+		move(12 + i, WIDTH + 21);
 		for (j = 0; j < 4; j++) {
 			if (block[nextBlock[2]][0][i][j] == 1) {
 				attron(A_REVERSE);
@@ -275,6 +275,7 @@ void DrawChange(char f[HEIGHT][WIDTH], int command, int currentBlock, int blockR
 	int preR = blockRotate;
 	int preX = blockX;
 	int preY = blockY;
+	int flag = 1;
 
 	//이전 블럭의 형태 계산
 	switch (command) {
@@ -303,8 +304,21 @@ void DrawChange(char f[HEIGHT][WIDTH], int command, int currentBlock, int blockR
 		}
 	}
 
-	DrawBlock(blockY, blockX, currentBlock, blockRotate, ' ');
-	DrawBlockWithFeatures(blockY, blockX, currentBlock, blockRotate);
+	while (flag) {
+		flag = CheckToMove(field, currentBlock, blockRotate, ++preY, preX);
+	}
+	preY--;
+
+	for (int i = 0; i < 4; ++i) {
+		for (int j = 0; j < 4; ++j) {
+			if (block[currentBlock][preR][i][j] == 1 && i + preY >= 0) {
+				move(i + preY + 1, j + preX + 1);
+				printw(".");
+			}
+		}
+	}
+
+	DrawBlockWithFeatures(preY, preX, currentBlock, blockRotate);
 	move(HEIGHT, WIDTH + 10);
 }
 
