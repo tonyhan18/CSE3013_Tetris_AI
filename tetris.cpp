@@ -45,6 +45,7 @@ void InitTetris() {
 	DrawOutline();
 	DrawField();
 	DrawBlock(blockY, blockX, nextBlock[0], blockRotate, ' ');
+	DrawBlockWithFeatures(blockY, blockX, nextBlock[0], blockRotate);
 	DrawNextBlock(nextBlock);
 	PrintScore(score);
 }
@@ -303,6 +304,7 @@ void DrawChange(char f[HEIGHT][WIDTH], int command, int currentBlock, int blockR
 	}
 
 	DrawBlock(blockY, blockX, currentBlock, blockRotate, ' ');
+	DrawBlockWithFeatures(blockY, blockX, currentBlock, blockRotate);
 	move(HEIGHT, WIDTH + 10);
 }
 
@@ -317,7 +319,7 @@ void BlockDown(int sig) {
 			gameOver = 1;
 			return;
 		}
-		AddBlockToField(field, nextBlock[0], blockRotate, blockY, blockX);
+		score += AddBlockToField(field, nextBlock[0], blockRotate, blockY, blockX);
 		score += DeleteLine(field);
 		nextBlock[0] = nextBlock[1];
 		nextBlock[1] = nextBlock[2];
@@ -328,6 +330,7 @@ void BlockDown(int sig) {
 		blockX = WIDTH / 2 - 2;
 
 		DrawBlock(blockY, blockX, nextBlock[0], blockRotate, ' ');
+		DrawBlockWithFeatures(blockY, blockX, nextBlock[0], blockRotate);
 		DrawField();
 
 		DrawNextBlock(nextBlock);
@@ -338,15 +341,19 @@ void BlockDown(int sig) {
 
 
 
-void AddBlockToField(char f[HEIGHT][WIDTH], int currentBlock, int blockRotate, int blockY, int blockX) {
+int AddBlockToField(char f[HEIGHT][WIDTH], int currentBlock, int blockRotate, int blockY, int blockX) {
 	// user code
+
+	int touched=0;
 
 	//Block이 추가된 영역의 필드값을 바꾼다.
 	for (int i = 0; i < 4; ++i) {
 		for (int j = 0; j < 4; ++j) {
 			if (block[currentBlock][blockRotate][i][j] == 1) f[i + blockY][j + blockX] = 1;
+			if (blockY == HEIGHT) touched++;
 		}
 	}
+	return touched*10;
 }
 
 int DeleteLine(char f[HEIGHT][WIDTH]) {
