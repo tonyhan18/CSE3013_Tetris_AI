@@ -34,6 +34,7 @@ void InitTetris() {
 
 	nextBlock[0] = rand() % 7;
 	nextBlock[1] = rand() % 7;
+	nextBlock[2] = rand() % 7;
 	blockRotate = 0;
 	blockY = -1;
 	blockX = WIDTH / 2 - 2;
@@ -147,6 +148,18 @@ void DrawNextBlock(int* nextBlock) {
 		move(4 + i, WIDTH + 13);
 		for (j = 0; j < 4; j++) {
 			if (block[nextBlock[1]][0][i][j] == 1) {
+				attron(A_REVERSE);
+				printw(" ");
+				attroff(A_REVERSE);
+			}
+			else printw(" ");
+		}
+	}
+
+	for (i = 0; i < 4; i++) {
+		move(12 + i, WIDTH + 13);
+		for (j = 0; j < 4; j++) {
+			if (block[nextBlock[2]][0][i][j] == 1) {
 				attron(A_REVERSE);
 				printw(" ");
 				attroff(A_REVERSE);
@@ -307,7 +320,8 @@ void BlockDown(int sig) {
 		AddBlockToField(field, nextBlock[0], blockRotate, blockY, blockX);
 		score += DeleteLine(field);
 		nextBlock[0] = nextBlock[1];
-		nextBlock[1] = rand()%7;
+		nextBlock[1] = nextBlock[2];
+		nextBlock[2] = rand() % 7;
 
 		blockRotate = 0;
 		blockY = -1;
@@ -364,8 +378,17 @@ int DeleteLine(char f[HEIGHT][WIDTH]) {
 
 ///////////////////////////////////////////////////////////////////////////
 
+void DrawBlockWithFeatures(int y, int x, int blockID, int blockRotate) {
+	DrawShadow(y, x, blockID, blockRotate);
+	DrawBlock(y, x, blockID, blockRotate, ' ');
+}
+
 void DrawShadow(int y, int x, int blockID, int blockRotate) {
-	// user code
+	int avail = 1;
+
+	while (avail) avail = CheckToMove(field, blockID, blockRotate, ++y, x);
+
+	if(avail) DrawBlock(--y, x, blockID, blockRotate, '/');
 }
 
 void createRankList() {
