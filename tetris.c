@@ -35,6 +35,7 @@ void InitTetris() {
 	nextBlock[0] = rand() % 7;
 	nextBlock[1] = rand() % 7;
 	nextBlock[2] = rand() % 7;
+
 	blockRotate = 0;
 	blockY = -1;
 	blockX = WIDTH / 2 - 2;
@@ -44,7 +45,6 @@ void InitTetris() {
 
 	DrawOutline();
 	DrawField();
-	DrawBlock(blockY, blockX, nextBlock[0], blockRotate, ' ');
 	DrawBlockWithFeatures(blockY, blockX, nextBlock[0], blockRotate);
 	DrawNextBlock(nextBlock);
 	PrintScore(score);
@@ -59,11 +59,12 @@ void DrawOutline() {
 	move(2, WIDTH + 10);
 	printw("NEXT BLOCK");
 	DrawBox(3, WIDTH + 10, 4, 8);
+	DrawBox(10, WIDTH + 10, 4, 8);
 
 	/* score를 보여주는 공간의 태두리를 그린다.*/
-	move(9, WIDTH + 10);
+	move(17, WIDTH + 10);
 	printw("SCORE");
-	DrawBox(10, WIDTH + 10, 1, 8);
+	DrawBox(18, WIDTH + 10, 1, 8);
 }
 
 int GetCommand() {
@@ -139,7 +140,7 @@ void DrawField() {
 
 
 void PrintScore(int score) {
-	move(22, WIDTH + 11);
+	move(19, WIDTH + 11);
 	printw("%8d", score);
 }
 
@@ -158,7 +159,7 @@ void DrawNextBlock(int* nextBlock) {
 	}
 
 	for (i = 0; i < 4; i++) {
-		move(12 + i, WIDTH + 21);
+		move(11 + i, WIDTH + 13);
 		for (j = 0; j < 4; j++) {
 			if (block[nextBlock[2]][0][i][j] == 1) {
 				attron(A_REVERSE);
@@ -257,9 +258,9 @@ int CheckToMove(char f[HEIGHT][WIDTH], int currentBlock, int blockRotate, int bl
 		for (int j = 0; j < 4; ++j) {
 			//블락중에 바뀌는 거 일때 체크
 			if (block[currentBlock][blockRotate][i][j] == 1) {
-				if (i + blockY >= HEIGHT || j + blockX >= WIDTH
-					|| i + blockY < 0 || j + blockX < 0) return 0;
-				if (field[i + blockY][j + blockX] == 1) return 0;
+				if(f[i+blockY][j+blockX] == 1) return 0;
+				if (i + blockY >= HEIGHT || i+blockY<0 || 
+					j + blockX >= WIDTH || j + blockX < 0) return 0;
 			}
 		}
 	}
@@ -305,21 +306,22 @@ void DrawChange(char f[HEIGHT][WIDTH], int command, int currentBlock, int blockR
 	}
 
 	while (flag) {
-		flag = CheckToMove(field, currentBlock, blockRotate, ++preY, preX);
+		flag = CheckToMove(field, currentBlock, preR, ++preY, preX);
 	}
 	preY--;
 
+	//기존의 그림자 삭제
 	for (int i = 0; i < 4; ++i) {
 		for (int j = 0; j < 4; ++j) {
 			if (block[currentBlock][preR][i][j] == 1 && i + preY >= 0) {
-				move(i + preY + 1, j + preX + 1);
+				move(i + preY+1, j + preX + 1);
 				printw(".");
 			}
 		}
 	}
 
-	DrawBlockWithFeatures(preY, preX, currentBlock, blockRotate);
-	move(HEIGHT, WIDTH + 10);
+	DrawBlockWithFeatures(blockY, blockX, currentBlock, blockRotate);
+	//move(HEIGHT, WIDTH + 10);
 }
 
 int AddBlockToField(char f[HEIGHT][WIDTH], int currentBlock, int blockRotate, int blockY, int blockX) {
@@ -362,7 +364,6 @@ void BlockDown(int sig) {
 		blockY = -1;
 		blockX = WIDTH / 2 - 2;
 
-		DrawBlock(blockY, blockX, nextBlock[0], blockRotate, ' ');
 		DrawBlockWithFeatures(blockY, blockX, nextBlock[0], blockRotate);
 		DrawField();
 
@@ -401,17 +402,16 @@ int DeleteLine(char f[HEIGHT][WIDTH]) {
 
 ///////////////////////////////////////////////////////////////////////////
 
-void DrawBlockWithFeatures(int y, int x, int blockID, int blockRotate) {
-	DrawShadow(y, x, blockID, blockRotate);
-	DrawBlock(y, x, blockID, blockRotate, ' ');
+void DrawBlockWithFeatures(int blockY, int blockX, int blockID, int blockRotate) {
+	DrawShadow(blockY, blockX, blockID, blockRotate);
+	DrawBlock(blockY, blockX, blockID, blockRotate, ' ');
 }
 
 void DrawShadow(int y, int x, int blockID, int blockRotate) {
 	int avail = 1;
 
 	while (avail) avail = CheckToMove(field, blockID, blockRotate, ++y, x);
-
-	if(avail) DrawBlock(--y, x, blockID, blockRotate, '/');
+	DrawBlock(--y, x, blockID, blockRotate, '/');
 }
 
 void createRankList() {
