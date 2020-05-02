@@ -308,6 +308,23 @@ void DrawChange(char f[HEIGHT][WIDTH], int command, int currentBlock, int blockR
 	move(HEIGHT, WIDTH + 10);
 }
 
+int AddBlockToField(char f[HEIGHT][WIDTH], int currentBlock, int blockRotate, int blockY, int blockX) {
+	// user code
+
+	int touched = 0;
+
+	//Block이 추가된 영역의 필드값을 바꾼다.
+	for (int i = 0; i < 4; ++i) {
+		for (int j = 0; j < 4; ++j) {
+			if (block[currentBlock][blockRotate][i][j] == 1) {
+				f[i + blockY][j + blockX] = 1;
+				if ((blockY + i + 1) == HEIGHT) touched++;
+			}
+		}
+	}
+	return touched * 10;
+}
+
 void BlockDown(int sig) {
 	if (CheckToMove(field, nextBlock[0], blockRotate, blockY+1, blockX)==1) {
 		blockY++;
@@ -322,6 +339,7 @@ void BlockDown(int sig) {
 
 		score += AddBlockToField(field, nextBlock[0], blockRotate, blockY, blockX);
 		score += DeleteLine(field);
+
 		nextBlock[0] = nextBlock[1];
 		nextBlock[1] = nextBlock[2];
 		nextBlock[2] = rand() % 7;
@@ -338,23 +356,6 @@ void BlockDown(int sig) {
 		PrintScore(score);
 	}
 	timed_out = 0;
-}
-
-int AddBlockToField(char f[HEIGHT][WIDTH], int currentBlock, int blockRotate, int blockY, int blockX) {
-	// user code
-
-	int touched=0;
-
-	//Block이 추가된 영역의 필드값을 바꾼다.
-	for (int i = 0; i < 4; ++i) {
-		for (int j = 0; j < 4; ++j) {
-			if (block[currentBlock][blockRotate][i][j] == 1) {
-				f[i + blockY][j + blockX] = 1;
-				if ((blockY + i+1) == HEIGHT) touched++;
-			}
-		}
-	}
-	return touched*10;
 }
 
 int DeleteLine(char f[HEIGHT][WIDTH]) {

@@ -20,7 +20,7 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="tetris.cpp">
+    <ClCompile Include="tetris.c">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
