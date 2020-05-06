@@ -37,7 +37,7 @@ typedef struct _RecNode {
 
 typedef struct _Node {
     int score;
-    char name[NAMELEN];
+    char name[NAMELEN+1];
     struct _Node* link;
 }Node;
 
@@ -150,7 +150,7 @@ int score;			/* 점수가 저장*/
 int gameOver = 0;			/* 게임이 종료되면 1로 setting된다.*/
 int timed_out;
 int recommendR, recommendY, recommendX; // 추천 블럭 배치 정보. 차례대로 회전, Y 좌표, X 좌표
-int score_number;
+int score_number=0;
 RecNode* recRoot;
 Node* head;
 

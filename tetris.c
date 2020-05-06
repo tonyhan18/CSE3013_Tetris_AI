@@ -260,9 +260,9 @@ int CheckToMove(char f[HEIGHT][WIDTH], int currentBlock, int blockRotate, int bl
 		for (int j = 0; j < 4; ++j) {
 			//블락중에 바뀌는 거 일때 체크
 			if (block[currentBlock][blockRotate][i][j] == 1) {
-				if(f[i+blockY][j+blockX] == 1) return 0;
-				if (i + blockY >= HEIGHT || i+blockY<0) return 0;
-				if(j + blockX >= WIDTH || j + blockX < 0) return 0;
+				if (f[i + blockY][j + blockX] == 1) return 0;
+				if (i + blockY >= HEIGHT || i + blockY < 0) return 0;
+				if (j + blockX >= WIDTH || j + blockX < 0) return 0;
 			}
 		}
 	}
@@ -316,7 +316,7 @@ void DrawChange(char f[HEIGHT][WIDTH], int command, int currentBlock, int blockR
 	for (int i = 0; i < 4; ++i) {
 		for (int j = 0; j < 4; ++j) {
 			if (block[currentBlock][preR][i][j] == 1 && i + preY >= 0) {
-				move(i + preY+1, j + preX + 1);
+				move(i + preY + 1, j + preX + 1);
 				printw(".");
 			}
 		}
@@ -344,7 +344,7 @@ int AddBlockToField(char f[HEIGHT][WIDTH], int currentBlock, int blockRotate, in
 }
 
 void BlockDown(int sig) {
-	if (CheckToMove(field, nextBlock[0], blockRotate, blockY+1, blockX)==1) {
+	if (CheckToMove(field, nextBlock[0], blockRotate, blockY + 1, blockX) == 1) {
 		blockY++;
 		DrawChange(field, KEY_DOWN, nextBlock[0], blockRotate, blockY, blockX);
 		move(HEIGHT, WIDTH + 10);
@@ -424,7 +424,7 @@ void createRankList() {
 	// 2. 파일에서 랭킹정보 읽어오기
 	// 3. LinkedList로 저장
 	// 4. 파일 닫기
-	//FILE* fp;
+	FILE* fp;
 	int i, j;
 	Node* newNode;
 	Node* cNode;
@@ -434,9 +434,9 @@ void createRankList() {
 	cNode = head;
 
 	//1. 파일 열기
-	//fp = fopen("rnak.txt", "r");
-	freopen("rank.txt", "r", stdin);
-	scanf("%d", &score_number);
+	fp = fopen("rank.txt", "r");
+	//freopen("rank.txt", "r", stdin);
+	fscanf(fp, "%d", &score_number);
 
 	// 2. 정보읽어오기
 	/* int fscanf(FILE* stream, const char* format, ...);
@@ -445,15 +445,15 @@ void createRankList() {
 	변수의 주소: 포인터
 	return: 성공할 경우, fscanf 함수는 읽어들인 데이터의 수를 리턴, 실패하면 EOF리턴 */
 	// EOF(End Of File): 실제로 이 값은 -1을 나타냄, EOF가 나타날때까지 입력받아오는 if문
-	
+
 	for (int i = 0; i < score_number; ++i) {
 		newNode = (Node*)malloc(sizeof(Node));
-		scanf("%s %d", newNode->name, &(newNode->score));
+		fscanf(fp, "%s %d", newNode->name, &(newNode->score));
 		newNode->link = NULL;
 		cNode->link = newNode;
 		cNode = newNode;
 	}
-	fclose(stdin);
+	fclose(fp);
 }
 
 void rank() {
@@ -461,6 +461,7 @@ void rank() {
 	int X = 1, Y = score_number, ch, i, j;
 	Node* cNode = head;
 	clear();
+
 	printw("1. list ranks from X to Y\n");
 	printw("2. list ranks by a specific name\n");
 	printw("3. delete a specific rank\n");
@@ -474,7 +475,8 @@ void rank() {
 		printw("Y: ");
 		scanw("%d", &Y);
 		noecho();
-		printw("		name		|	score	\n");
+
+		printw("	name   	|	score	\n");
 		printw("---------------------------------\n");
 		if (X > Y || score_number == 0 || X > score_number)
 			mvprintw(8, 0, "search failure: no rank in the list\n");
@@ -485,10 +487,9 @@ void rank() {
 			}
 
 			while (i++ <= Y) {
-				printw("%s %d\n", cNode->name, cNode->score);
+				printw("%15s | %d\n", cNode->name, cNode->score);
 				cNode = cNode->link;
 			}
-			wgetch(stdscr);
 		}
 	}
 	else if (ch == '2') {
@@ -497,73 +498,68 @@ void rank() {
 	else if (ch == '3') {
 
 	}
+	wgetch(stdscr);
 }
 
 void writeRankFile() {
 	// 목적: 추가된 랭킹 정보가 있으면 새로운 정보를 "rank.txt"에 쓰고 없으면 종료
-	int sn, i;
-	Node* cNode = head;
-
-	//1. "rank.txt" 연다
-	//FILE* fp = fopen("rank.txt", "r");
-	freopen("rank.txt", "r", stdin);
-	scanf("%d", &sn);
-	fclose(stdin);
-
-	freopen("rank.txt", "w", stdout);
+	FILE * fp = fopen("rank.txt", "w");
+	Node* cNode = head->link;
 
 	//2. 랭킹 정보들의 수를 "rank.txt"에 기록
-	printf("%d", score_number);
+	fprintf(fp, "%d", score_number);
 
 	//3. 탐색할 노드가 더 있는지 체크하고 있으면 다음 노드로 이동, 없으면 종료
-	if (sn == score_number) return;
-	else {
-		for (int i = 0; i < sn; ++i) {
-			cNode = cNode->link;
-		}
-
-		while (i++ <= score_number) {
-			printf("%s %d\n", cNode->name, cNode->score);
-		}
-
+	while (cNode) {
+		fprintf(fp, "%s %d\n", cNode->name, cNode->score);
+		cNode = cNode->link;
 	}
 
-	fclose(stdout);
-	//for (i = 1; i < score_number + 1; i++) {
-	//	free(a.rank_name[i]);
-	//}
-	//free(a.rank_name);
-	//free(a.rank_score);
+	fclose(fp);
 }
 
 void newRank(int score) {
 	// 목적: GameOver시 호출되어 사용자 이름을 입력받고 score와 함께 리스트의 적절한 위치에 저장
 	char str[NAMELEN + 1];
 	int i, j;
-	Node* newNode;
+	Node* newNode = (Node*)malloc(sizeof(Node));
+	Node* pNode = head, *cNode;
 	clear();
-	echo();
 
+	echo();
 	//1. 사용자 이름을 입력받음
 	printw("Input your name: ");
-	scanf("%s", newNode->name);
-	newNode->score = score;
+	scanw("%s", str);
+	strcpy(newNode->name, str);
 	noecho();
+
+	newNode->score = score;
+	newNode->link = NULL;
 
 	//2. 새로운 노드를 생성해 이름과 점수를 저장, score_number가
 	if (score_number == 0) {
 		head->link = newNode;
 	}
 	else {
-		Node* cNode = head;
-		Node* pNode = cNode;
-		while (cNode != NULL) {
-			cNode = cNode->link;
-			if (cNode->score < score) break;
-			pNode = cNode;
+		while(pNode->link) {
+			cNode = pNode;
+			pNode = pNode->link;
+			if (score > pNode->score) {
+				cNode->link= newNode;
+				newNode->link = pNode;
+				break;
+			}
 		}
-		newNode->link = pNode->link;
-		pNode->link = newNode;
+
+		if (!(pNode->link)) {
+			if (score > pNode->score) {
+				cNode->link = newNode;
+				newNode->link = pNode;
+			}
+			else {
+				pNode->link = newNode;
+			}
+		}
 	}
 	score_number++;
 	writeRankFile();
