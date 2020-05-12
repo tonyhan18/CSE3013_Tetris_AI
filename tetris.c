@@ -460,6 +460,10 @@ void rank() {
 	// user code
 	int X = 1, Y = score_number, ch, i, j;
 	Node* cNode = head;
+	Node* temp;
+	char name[NAMELEN + 1];
+	int flag = 0;
+	int dNum = 0;
 	clear();
 
 	printw("1. list ranks from X to Y\n");
@@ -476,11 +480,14 @@ void rank() {
 		scanw("%d", &Y);
 		noecho();
 
+		if(X==0) X=1;
+		if(Y>score_number) Y=score_number;
 		printw("	name   	|	score	\n");
 		printw("---------------------------------\n");
-		if (X > Y || score_number == 0 || X > score_number)
+		if (X > Y || score_number == 0 || X > score_number || X<0)
 			mvprintw(8, 0, "search failure: no rank in the list\n");
 		else {
+			if(Y>score_number) Y=score_number;
 			//채워 넣기
 			for (i = 0; i < X; ++i) {
 				cNode = cNode->link;
@@ -493,10 +500,46 @@ void rank() {
 		}
 	}
 	else if (ch == '2') {
+		printw("input the name: ");
+		echo();
+		scanw("%s", name);
+		noecho();
 
+		printw("	name   	|	score	\n");
+		printw("---------------------------------\n");
+
+		while (cNode->link != NULL) {
+			cNode = cNode->link;
+			if (!strcmp(cNode->name, name)) {
+				printw("%15s | %d\n", cNode->name, cNode->score);
+				flag = 1;
+			}
+		}
+		if (flag == 0) {
+			mvprintw(8, 0, "search failure: no name in the list\n");
+		}
 	}
 	else if (ch == '3') {
+		printw("input the rank: ");
+		echo();
+		scanw("%d", &dNum);
+		noecho();
 
+		if (dNum > score_number) {
+			mvprintw(8, 0, "search failure: the rank not in the list\n");
+		}
+		else {
+			for (i = 0; i < dNum; ++i) {
+				temp = cNode;
+				cNode = cNode->link;
+			}
+		
+			printw("result: the rank deleted\n");	
+			temp->link = cNode->link;
+			free(cNode);
+			score_number--;
+			writeRankFile();
+		}
 	}
 	wgetch(stdscr);
 }
@@ -523,7 +566,7 @@ void newRank(int score) {
 	char str[NAMELEN + 1];
 	int i, j;
 	Node* newNode = (Node*)malloc(sizeof(Node));
-	Node* pNode = head, *cNode;
+	Node* temp = head, *cNode;
 	clear();
 
 	echo();
@@ -541,23 +584,23 @@ void newRank(int score) {
 		head->link = newNode;
 	}
 	else {
-		while(pNode->link) {
-			cNode = pNode;
-			pNode = pNode->link;
-			if (score > pNode->score) {
+		while(temp->link) {
+			cNode = temp;
+			temp = temp->link;
+			if (score > temp->score) {
 				cNode->link= newNode;
-				newNode->link = pNode;
+				newNode->link = temp;
 				break;
 			}
 		}
 
-		if (!(pNode->link)) {
-			if (score > pNode->score) {
+		if (!(temp->link)) {
+			if (score > temp->score) {
 				cNode->link = newNode;
-				newNode->link = pNode;
+				newNode->link = temp;
 			}
 			else {
-				pNode->link = newNode;
+				temp->link = newNode;
 			}
 		}
 	}
