@@ -154,7 +154,8 @@ int gameOver = 0;			/* 게임이 종료되면 1로 setting된다.*/
 int timed_out;
 int recommendR, recommendY, recommendX; // 추천 블럭 배치 정보. 차례대로 회전, Y 좌표, X 좌표
 int score_number=0;
-double weight[7] = { -3.78, -8.8, -0.59, 8.2, 3.7, 2.5, 4.0 };
+int recoPlay;
+double weight[7] = { -3.78, -8.8, -0.59, 0.82, 3.7, 2.5, 4.0 };
 RecNode* recRoot;
 Node* head;
 
@@ -357,6 +358,8 @@ void newRank(int score);
  *	return	: (int) 추천 블럭 배치를 따를 때 얻어지는 예상 스코어
  ***********************************************************/
 int recommend(char field[HEIGHT][WIDTH], int lv);
+int modified_recommend(char pField[HEIGHT][WIDTH], int lv);
+
 
 /***********************************************************
  *	추천 기능에 따라 블럭을 배치하여 진행하는 게임을 시작한다.

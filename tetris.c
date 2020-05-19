@@ -17,7 +17,12 @@ int main() {
 		switch (menu()) {
 		case MENU_PLAY: play(); break;
 		case MENU_RANK: rank(); break;
-		case MENU_REC: recommendedPlay(); break;
+		case MENU_REC: {
+			recoPlay = 1;
+			recommendedPlay(); 
+			recoPlay = 0;
+			break;
+		}
 		case MENU_EXIT: exit = 1; break;
 		default: break;
 		}
@@ -38,8 +43,6 @@ void InitTetris() {
 	nextBlock[0] = rand() % 7;
 	nextBlock[1] = rand() % 7;
 	nextBlock[2] = rand() % 7;
-	nextBlock[3] = rand() % 7;
-	nextBlock[4] = rand() % 7;
 
 	blockRotate = 0;
 	blockY = -1;
@@ -49,7 +52,9 @@ void InitTetris() {
 	timed_out = 0;
 
 	//
-	recommend(field, 0);
+	if (recoPlay == 1) modified_recommend(field, 0);
+	else recommend(field, 0);
+
 	DrawOutline();
 	DrawField();
 	DrawBlockWithFeatures(blockY, blockX, nextBlock[0], blockRotate);
@@ -355,6 +360,12 @@ int AddBlockToField(char f[HEIGHT][WIDTH], int currentBlock, int blockRotate, in
 }
 
 void BlockDown(int sig) {
+	if (recoPlay && CheckToMove(field, nextBlock[0], recommendR, recommendY, recommendX)) {
+		blockX = recommendX;
+		blockY = recommendY;
+		blockRotate = recommendR;
+	}
+
 	if (CheckToMove(field, nextBlock[0], blockRotate, blockY + 1, blockX) == 1) {
 		blockY++;
 		DrawChange(field, KEY_DOWN, nextBlock[0], blockRotate, blockY, blockX);
@@ -371,15 +382,15 @@ void BlockDown(int sig) {
 
 		nextBlock[0] = nextBlock[1];
 		nextBlock[1] = nextBlock[2];
-		nextBlock[2] = nextBlock[3];
-		nextBlock[3] = nextBlock[4];
-		nextBlock[4] = rand() % 7;
+		nextBlock[2] = rand() % 7;
 
 		blockRotate = 0;
 		blockY = -1;
 		blockX = WIDTH / 2 - 2;
 
-		recommend(field, 0);
+		
+		if(recoPlay == 1) modified_recommend(field, 0);
+		else recommend(field, 0);
 		DrawBlockWithFeatures(blockY, blockX, nextBlock[0], blockRotate);
 		DrawField();
 
@@ -691,9 +702,122 @@ int recommend(char pField[HEIGHT][WIDTH], int lv) {
 	return maxVal;
 }
 
-int modified_recommend(char pField[WIDTH][HEIGHT]) {
+int modified_recommend(char pField[HEIGHT][WIDTH], int lv) {
+	int i, j, r;
+	double score=0;
+	double maxVal = -999999999; // 미리 보이는 블럭의 추천 배치까지 고려했을 때 얻을 수 있는 최대 점수
 
+	int x, y;
+
+	char cField[HEIGHT][WIDTH];
+
+	int blockHeight = 0;
+	int sideBlock = 0;
+	int blockBlock = 0;
+	int line = 0;
+	int touched = 0;
+	int sideTouched = 0;
+	int bottomTouched = 0;
+	
+	int flag, cnt;
+	// 회전의 경우 4가지
+	for (r = 0; r < 4; r++) {
+		if ((nextBlock[lv] == 0) && r >= 2) continue;
+		if( (nextBlock[lv] >= 4) && r >= 2) continue;
+
+		// x축 위에서 움직이며 위치에 대한 가지수
+		for (x = -1; x < WIDTH; x++) {
+
+			//값 옮겨 놓기
+			for (j = 0; j < HEIGHT; j++)
+				for (i = 0; i < WIDTH; i++)
+					cField[j][i] = pField[j][i];
+
+			//블록을 위치시킬 수 있는지 확인
+			y = 0;
+			while (CheckToMove(pField, nextBlock[lv], r, ++y, x) == 1);
+			y--;
+
+			if (y <= -1) continue;
+
+			score = 0;
+			blockHeight = 0;
+			sideBlock = 0;
+			blockBlock = 0;
+			line = 0;
+			touched = 0;
+			sideTouched = 0;
+			bottomTouched = 0;
+
+			for (j = 0; j < 4; j++) {
+				for (i = 0; i < 4; i++) {
+					if (block[nextBlock[lv]][r][j][i] == 1) {
+
+						//다른 블럭을 터치한 경우
+						if ((cField[j + y + 1][i + x] == 1)) touched++;
+						if ((j + y + 1 == HEIGHT)) bottomTouched++;
+						if ((i + x - 1 == -1 || i + x + 1 == WIDTH)) sideTouched++;
+						if ((i + x >= 0 && i + x < WIDTH) && (cField[j + y][i + x - 1] == 1 || cField[j + y][i + x + 1] == 1)) touched++;
+
+						//높이를 넘지 않으면서 다른 블록과 닿은 경우
+						cField[j + y][i + x] = 1;
+					}
+				}
+			}
+
+			for (i = 0; i < WIDTH; ++i) {
+				flag = 0;
+				cnt = 0;
+				for (j = 0; j < HEIGHT; ++j) {
+					if (cField[j][i] == 1 && flag == 0) {
+						blockHeight += HEIGHT - cnt+1;
+						flag = 1;
+					}
+					if (flag == 0 && cField[j][i] == 0) {
+						cnt++;
+					}
+					if (flag == 1 && cField[j][i] == 0) {
+						sideBlock++;
+					}
+				}
+			}
+
+			for (i = 0; i < WIDTH; ++i) {
+				flag = 0;
+				for (j = 0; j < HEIGHT; ++j) {
+					if (cField[j][i] == 0 && flag == 0) flag = 1;
+					if (cField[j][i] == 1 && flag == 1) blockBlock++;
+				}
+			}
+
+			//라인을 삭제한 경우
+			line = DeleteLine(cField);
+
+			score = blockHeight *weight[0];
+			score += sideBlock * weight[1];
+			score += blockBlock * weight[2];
+			score += line * weight[3];
+			score += touched * weight[4];
+			score += sideTouched * weight[5];
+			score += bottomTouched * weight[6];
+
+			if(lv!=2) score += modified_recommend(cField, lv + 1);
+			//(score + (touched*weight[4])+(bottomTouched*weight[6]))
+			if ((maxVal <= score)) {
+
+				maxVal = score;
+				if (lv == 0) {
+					recommendX = x;
+					recommendY = y;
+					recommendR = r;
+				}
+			}
+		}
+	}
+
+	return maxVal;
 }
+
 void recommendedPlay() {
 	int command;
 
@@ -702,7 +826,7 @@ void recommendedPlay() {
 	sigaction(SIGALRM, &act, &oact);
 	InitTetris();
 
-	recommend(field, 0);
+	modified_recommend(field, 0);
 	DrawField();
 	do {
 		if (timed_out == 0) {
