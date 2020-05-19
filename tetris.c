@@ -17,6 +17,7 @@ int main() {
 		switch (menu()) {
 		case MENU_PLAY: play(); break;
 		case MENU_RANK: rank(); break;
+		case MENU_REC: recommendedPlay(); break;
 		case MENU_EXIT: exit = 1; break;
 		default: break;
 		}
@@ -37,6 +38,8 @@ void InitTetris() {
 	nextBlock[0] = rand() % 7;
 	nextBlock[1] = rand() % 7;
 	nextBlock[2] = rand() % 7;
+	nextBlock[3] = rand() % 7;
+	nextBlock[4] = rand() % 7;
 
 	blockRotate = 0;
 	blockY = -1;
@@ -45,6 +48,8 @@ void InitTetris() {
 	gameOver = 0;
 	timed_out = 0;
 
+	//
+	recommend(field, 0);
 	DrawOutline();
 	DrawField();
 	DrawBlockWithFeatures(blockY, blockX, nextBlock[0], blockRotate);
@@ -82,6 +87,7 @@ int GetCommand() {
 	case KEY_RIGHT:
 		break;
 	case ' ':	/* space key*/
+		command = FALL;
 		/*fall block*/
 		break;
 	case 'q':
@@ -118,6 +124,9 @@ int ProcessCommand(int command) {
 		if ((drawFlag = CheckToMove(field, nextBlock[0], blockRotate, blockY, blockX - 1)))
 			blockX--;
 		break;
+	case FALL:
+		while (drawFlag = CheckToMove(field, nextBlock[0], blockRotate, blockY, blockX)) blockY++;
+		blockY--;
 	default:
 		break;
 	}
@@ -214,6 +223,8 @@ void play() {
 	act.sa_handler = BlockDown;
 	sigaction(SIGALRM, &act, &oact);
 	InitTetris();
+	recommend(field, 0);
+	DrawField();
 
 	do {
 		if (timed_out == 0) {
@@ -360,12 +371,15 @@ void BlockDown(int sig) {
 
 		nextBlock[0] = nextBlock[1];
 		nextBlock[1] = nextBlock[2];
-		nextBlock[2] = rand() % 7;
+		nextBlock[2] = nextBlock[3];
+		nextBlock[3] = nextBlock[4];
+		nextBlock[4] = rand() % 7;
 
 		blockRotate = 0;
 		blockY = -1;
 		blockX = WIDTH / 2 - 2;
 
+		recommend(field, 0);
 		DrawBlockWithFeatures(blockY, blockX, nextBlock[0], blockRotate);
 		DrawField();
 
@@ -405,6 +419,7 @@ int DeleteLine(char f[HEIGHT][WIDTH]) {
 ///////////////////////////////////////////////////////////////////////////
 
 void DrawBlockWithFeatures(int blockY, int blockX, int blockID, int blockRotate) {
+	DrawRecommend(recommendY, recommendX, nextBlock[0], recommendR);
 	DrawShadow(blockY, blockX, blockID, blockRotate);
 	DrawBlock(blockY, blockX, blockID, blockRotate, ' ');
 }
@@ -609,17 +624,126 @@ void newRank(int score) {
 }
 
 void DrawRecommend(int y, int x, int blockID, int blockRotate) {
-	// user code
+	DrawBlock(y, x, blockID, blockRotate, 'R');
 }
 
-int recommend(RecNode* root) {
-	int max = 0; // 미리 보이는 블럭의 추천 배치까지 고려했을 때 얻을 수 있는 최대 점수
+int recommend(char pField[HEIGHT][WIDTH], int lv) {
+	int i, j, r;
+	int touched = 0;
+	int score;
+	int maxVal = 0; // 미리 보이는 블럭의 추천 배치까지 고려했을 때 얻을 수 있는 최대 점수
 
-	// user code
+	int x, y;
 
-	return max;
+	char cField[HEIGHT][WIDTH];
+
+	// 회전의 경우 4가지
+	for (r = 0; r < 4; r++) {
+		if ((nextBlock[lv] == 0 || nextBlock[lv] >= 4) && r >= 2) continue;
+
+		// x축 위에서 움직이며 위치에 대한 가지수
+		for (x = -1; x < WIDTH; x++) {
+
+			//다른 타일과 만난 수 저장하는 변수
+			touched = 0;
+
+			//값 옮겨 놓기
+			for (j = 0; j < HEIGHT; j++)
+				for (i = 0; i < WIDTH; i++)
+					cField[j][i] = pField[j][i];
+			
+			//블록을 위치시킬 수 있는지 확인
+			y = 0;
+			while (CheckToMove(pField, nextBlock[lv], r, ++y, x)==1);
+			y--;
+
+			if (y <= -1) continue;
+
+			for (j = 0; j < 4; j++) {
+				for (i = 0; i < 4; i++) {
+					if (block[nextBlock[lv]][r][j][i] == 1) {
+						//높이를 넘지 않으면서 다른 블록과 닿은 경우
+						if ( (cField[j + y + 1][i + x] == 1 || j + y + 1 == HEIGHT) && j + y + 1 <= HEIGHT)
+							touched++;
+						cField[j + y][i + x] = 1;
+					}
+				}
+			}
+
+			//라인을 삭제한 경우
+			score = DeleteLine(cField);
+
+			//그 다음 노드로 이동
+			if (lv != 2)
+				score += recommend(cField, lv + 1);
+
+			if (maxVal <= (score + touched * 10)) {
+				maxVal = score + touched * 10;
+				if (lv == 0) {
+					recommendX = x;
+					recommendY = y;
+					recommendR = r;
+				}
+			}
+		}
+	}
+
+	return maxVal;
 }
 
+int modified_recommend(char pField[WIDTH][HEIGHT]) {
+
+}
 void recommendedPlay() {
-	// user code
+	int command;
+
+	clear();
+	act.sa_handler = BlockDown;
+	sigaction(SIGALRM, &act, &oact);
+	InitTetris();
+
+	recommend(field, 0);
+	DrawField();
+	do {
+		if (timed_out == 0) {
+			alarm(1);
+			timed_out = 1;
+		}
+
+		command = GetCommand();
+		if (ProcessCommand(command) == QUIT) {
+			alarm(0);
+			DrawBox(HEIGHT / 2 - 1, WIDTH / 2 - 5, 1, 10);
+			move(HEIGHT / 2, WIDTH / 2 - 4);
+			printw("Good-bye!!");
+			refresh();
+			getch();
+
+			return;
+		}
+		ProcessCommand(KEY_DOWN);
+		for (int i = 0; i < 4; i++) {
+			if (recommendR != blockRotate)
+				ProcessCommand(KEY_UP);
+			else
+				break;
+		}
+
+		for (int i = 0; i < 20; i++) {
+			if (blockX > recommendX) ProcessCommand(KEY_LEFT);
+			else if (blockX < recommendX) ProcessCommand(KEY_RIGHT);
+			else break;
+		}
+		ProcessCommand(FALL);
+
+	} while (!gameOver);
+
+	alarm(0);
+	getch();
+	DrawBox(HEIGHT / 2 - 1, WIDTH / 2 - 5, 1, 10);
+	move(HEIGHT / 2, WIDTH / 2 - 4);
+	printw("GameOver!!");
+	refresh();
+	getch();
+	newRank(score);
 }

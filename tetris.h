@@ -8,20 +8,23 @@
 #include <ncurses.h>
 #include <signal.h>
 #include <string.h>
+#include <math.h>
 
 #define WIDTH	10
 #define HEIGHT	22
 #define NOTHING	0
 #define QUIT	'q'
+#define FALL 'f'
 #define NUM_OF_SHAPE	7
 #define NUM_OF_ROTATE	4
 #define BLOCK_HEIGHT	4
 #define BLOCK_WIDTH	4
-#define BLOCK_NUM	3
+#define BLOCK_NUM	5
 
 // menu number
 #define MENU_PLAY '1'
 #define MENU_RANK '2'
+#define MENU_REC '3'
 #define MENU_EXIT '4'
 
 // 사용자 이름의 길이
@@ -151,6 +154,7 @@ int gameOver = 0;			/* 게임이 종료되면 1로 setting된다.*/
 int timed_out;
 int recommendR, recommendY, recommendX; // 추천 블럭 배치 정보. 차례대로 회전, Y 좌표, X 좌표
 int score_number=0;
+double weight[7] = { -3.78, -8.8, -0.59, 8.2, 3.7, 2.5, 4.0 };
 RecNode* recRoot;
 Node* head;
 
@@ -352,7 +356,7 @@ void newRank(int score);
  *	input	: (RecNode*) 추천 트리의 루트
  *	return	: (int) 추천 블럭 배치를 따를 때 얻어지는 예상 스코어
  ***********************************************************/
-int recommend(RecNode* root);
+int recommend(char field[HEIGHT][WIDTH], int lv);
 
 /***********************************************************
  *	추천 기능에 따라 블럭을 배치하여 진행하는 게임을 시작한다.
