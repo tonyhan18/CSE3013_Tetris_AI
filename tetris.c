@@ -461,6 +461,12 @@ void createRankList() {
 
 	//1. 파일 열기
 	fp = fopen("rank.txt", "r");
+	if (fp == NULL) {
+		fp = fopen("rank.txt", "w");
+		fclose;
+		fp = fopen("rank.txt", "r");
+	}
+
 	//freopen("rank.txt", "r", stdin);
 	fscanf(fp, "%d", &score_number);
 
