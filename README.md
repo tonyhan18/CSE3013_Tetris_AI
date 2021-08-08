@@ -3,6 +3,20 @@
 제작기간 : 2020년 06월 약 1주일<br>
 참고내용 : [https://sbrngm.tistory.com/143](https://sbrngm.tistory.com/143), <br> [https://blog.naver.com/jh95kr2004/220721085651?proxyReferer=https%3A%2F%2Fblog.naver.com%2FPostView.nhn%3FblogId%3Ddevace%26logNo%3D221199728896%26redirect%3DDlog%26widgetTypeCall%3Dtrue%26directAccess%3Dfalse](https://blog.naver.com/jh95kr2004/220721085651?proxyReferer=https%3A%2F%2Fblog.naver.com%2FPostView.nhn%3FblogId%3Ddevace%26logNo%3D221199728896%26redirect%3DDlog%26widgetTypeCall%3Dtrue%26directAccess%3Dfalse)
 
+# 프로젝트 실행방법
+반드시 unix/linux/macOS 환경에서 실행할것 <br>
+개인적으로는 aws에서 ec2 서버를 만들어서 실행하는 것을 추천<br>
+<br>
+### How to Run
+> git clone https://github.com/tonyhan18/CSE3013_Tetris_AI.git<br>
+> make<br>
+> ./main<br>
+<br>
+
+### How to Clean
+> make clean<br>
+<br>
+
 # 프로젝트 추진 배경
 안녕하세요! 서강대 컴공을 다니고 다녔던 토니한 입니다. 저의 테트리스 프로젝트는 같은 학회 회원의 조언으로 휴리스틱 알고리즘 제작을 시작하게 되었습니다. <br>
 

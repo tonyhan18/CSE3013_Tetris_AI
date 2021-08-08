@@ -1,5 +1,15 @@
-all	: tetris.o
-	gcc -o main tetris.c -lncurses
+CC = gcc
+FLAGS = -Wall -Werror -Wextra
+
+SRC = tetris.c
+TARGET = main
+
+.c.o:
+	$(CC) -c $(SRC)
+
+all: tetris.o
+	@echo run program by ./main
+	$(CC) $(FLAGS) -o $(TARGET) $< -lncurses
 
 clean:
-	rm a.out *.o
+	rm -f main a.out *.o
